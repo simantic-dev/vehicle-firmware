@@ -22,7 +22,6 @@ void VCFInterface::receive_pedals_message(const CAN_message_t &msg, unsigned lon
         HT_CAN_accel_pedal_ro_fromS(static_cast<float>(pedals_msg.accel_pedal_ro));
     _curr_data.stamped_pedals.pedals_data.brake_percent =
         HT_CAN_brake_pedal_ro_fromS(static_cast<float>(pedals_msg.brake_pedal_ro));
-    _curr_data.stamped_pedals.last_recv_millis = curr_millis;
 
     // As long as we're using millis() function, loop overrun not a concern
 
