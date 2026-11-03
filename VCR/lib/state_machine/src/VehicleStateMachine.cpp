@@ -47,7 +47,7 @@ VehicleState_e VehicleStateMachine::tick_state_machine(unsigned long current_mil
                 break;
             }
 
-            if (_is_start_button_pressed() && _is_brake_pressed())
+            if (_is_start_button_pressed() && _is_brake_pressed() && !_check_pedals_timeout() && !_check_steering_timeout())
             {
                 _set_state(VehicleState_e::WANTING_READY_TO_DRIVE, current_millis);
                 break;
@@ -68,7 +68,7 @@ VehicleState_e VehicleStateMachine::tick_state_machine(unsigned long current_mil
                 _set_state(VehicleState_e::TRACTIVE_SYSTEM_ACTIVE, current_millis);
                 break;
             }
-            if (_check_drivetrain_ready())
+            if (_check_drivetrain_ready() && !_check_pedals_timeout() && !_check_steering_timeout())
             {
                 _set_state(VehicleState_e::READY_TO_DRIVE, current_millis);
                 break;

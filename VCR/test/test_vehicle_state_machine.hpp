@@ -590,3 +590,51 @@ TEST (VehicleStateMachine, ExitsReadyToDriveWhenPedalsTimeout) {
     ASSERT_DRIVETRAIN_COMMANDED(false, false);
 
 }
+
+TEST (VehicleStateMachine, NoReadyToDriveWithoutPedalsAndSteeringHeartbeat) {
+    VehicleStateMachine state_machine = VehicleStateMachine(
+        mock_hv_over_threshold,
+        mock_start_btn,
+        mock_brake_pressed,
+        mock_drivetrain_error,
+        mock_drivetrain_ready,
+        mock_start_buzzer,
+        mock_recalibrate_pedals,
+        mock_command_drivetrain,
+        mock_pedals_timeout,
+        mock_pedals_reset,
+        mock_inverter_button_pressed,
+        mock_calibrate_pedals_pressed,
+        mock_reset_inverter_error,
+        mock_recalibrate_steering,
+        mock_is_calibrate_steering_pressed,
+        mock_steering_timeout,
+        mock_steering_reset
+    );
+    reset_all_booleans();
+
+    hv_over_threshold = true;
+    state_machine.tick_state_machine(0);
+    ASSERT_EQ(state_machine.get_state(), VehicleState_e::TRACTIVE_SYSTEM_ACTIVE);
+
+    // Start + brake do nothing while the steering heartbeat is missing
+    start_btn = true;
+    brake_pressed = true;
+    steering_timeout = true;
+    state_machine.tick_state_machine(0);
+    state_machine.tick_state_machine(0);
+    ASSERT_EQ(state_machine.get_state(), VehicleState_e::TRACTIVE_SYSTEM_ACTIVE);
+
+    // Heartbeats back: WANTING_READY_TO_DRIVE, but READY_TO_DRIVE still needs them
+    steering_timeout = false;
+    state_machine.tick_state_machine(0);
+    state_machine.tick_state_machine(0);
+    ASSERT_EQ(state_machine.get_state(), VehicleState_e::WANTING_READY_TO_DRIVE);
+    drivetrain_ready = true;
+    pedals_timeout = true;
+    state_machine.tick_state_machine(0);
+    ASSERT_EQ(state_machine.get_state(), VehicleState_e::WANTING_READY_TO_DRIVE);
+    pedals_timeout = false;
+    state_machine.tick_state_machine(0);
+    ASSERT_EQ(state_machine.get_state(), VehicleState_e::READY_TO_DRIVE);
+}
