@@ -81,6 +81,8 @@ void initializeAllInterfaces()
                                 ChargerInterfaceInstance::instance(),
                                 EnergyMeterInterfaceInstance::instance()
     );
+    CANInterfacesInstance::instance().max_pack_voltage = CCUConstants::MAX_PACK_VOLTAGE;
+    CANInterfacesInstance::instance().cell_cutoff_voltage = CCUConstants::MAX_CELL_CUTOFF_VOLTAGE;
 
     CCUCANInterfaceInstance::create(etl::delegate<void(CANInterfaces_s&, const CAN_message_t&, unsigned long, CANInterfaceType_e)>::create<CCUCANInterfaceImpl::CCUReceiveIDSwitch>());
 
