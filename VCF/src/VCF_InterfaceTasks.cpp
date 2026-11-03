@@ -95,6 +95,7 @@ void initializeAllInterfaces()
         .DATA_BUTTON = VCFInterfaces::BTN_DATA_READ,
         .BUTTON_2 = VCFInterfaces::BUTTON_2
     };
+    Wire2.begin(); // the MCP23017 is configured in the DashboardInterface constructor, so the bus has to be running before it
     DashboardInterfaceInstance::create(dashboard_gpios, VCFSystems::IO_EXPANDER_ADDR, Wire2); //NOLINT
     DashboardInterfaceInstance::instance().init();
 
