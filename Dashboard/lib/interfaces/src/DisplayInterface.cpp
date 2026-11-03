@@ -130,7 +130,7 @@ void DisplayInterface::draw_battery_bar(int percent)
     // 0%: 59
     // 100% 0
     _display.fillRect(60, 5, 250, 20, _black);
-    int w = (100 - percent) * (246 / 100);
+    int w = ((100 - percent) * 246) / 100; // multiply first: 246 / 100 is 2 in integer math
     DisplayInterface::_draw_rectangle_right_corner(306, 7, w, 16, _white);
 }
 
