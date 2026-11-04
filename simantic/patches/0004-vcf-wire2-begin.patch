@@ -1,0 +1,13 @@
+# VCF: call Wire2.begin() before DashboardInterfaceInstance::create; the MCP23017 member initialiser configures the expander before the bus is started, so IOCON/IODIR/GPPU never reach it and the dial decodes wrong.
+diff --git a/VCF/src/VCF_InterfaceTasks.cpp b/VCF/src/VCF_InterfaceTasks.cpp
+index b27353a..75ba9bb 100644
+--- a/VCF/src/VCF_InterfaceTasks.cpp
++++ b/VCF/src/VCF_InterfaceTasks.cpp
+@@ -95,6 +95,7 @@ void initializeAllInterfaces()
+         .DATA_BUTTON = VCFInterfaces::BTN_DATA_READ,
+         .BUTTON_2 = VCFInterfaces::BUTTON_2
+     };
++    Wire2.begin(); // begin the bus before the expander constructor configures it
+     DashboardInterfaceInstance::create(dashboard_gpios, VCFSystems::IO_EXPANDER_ADDR, Wire2); //NOLINT
+     DashboardInterfaceInstance::instance().init();
+ 

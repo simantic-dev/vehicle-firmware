@@ -1,0 +1,45 @@
+mux: SPI.SPIMultiplexer @ lpspi3
+    ActiveLowMask: 0x3
+chain0: SPI.ScriptedSpiSlave @ mux 0
+    file: "@SIMANTIC@/peers/car/acu_ltc0.py"
+chain1: SPI.ScriptedSpiSlave @ mux 1
+    file: "@SIMANTIC@/peers/car/acu_ltc1.py"
+gpio2:
+    18 -> mux@0
+    0 -> adcmux@0
+gpio7:
+    18 -> mux@0
+    0 -> adcmux@0
+gpio1:
+    28 -> mux@1
+gpio6:
+    28 -> mux@1
+adcmux: SPI.SPIMultiplexer @ lpspi4
+    ActiveLowMask: 0x1
+adc0: SPI.ScriptedSpiSlave @ adcmux 0
+    file: "@SIMANTIC@/peers/car/acu_max1148.py"
+em: CAN.ScriptedCanNode @ sysbus 0x80200000
+    file: "@SIMANTIC@/peers/car/em.py"
+phy: Network.DP83825I @ enet 0
+aadc18: Analog.ADCChannelSource @ adc1 8
+    defaultValueMicroVolts: 500000
+aadc112: Analog.ADCChannelSource @ adc1 12
+    defaultValueMicroVolts: 2770000
+aadc111: Analog.ADCChannelSource @ adc1 11
+    defaultValueMicroVolts: 500000
+aadc15: Analog.ADCChannelSource @ adc1 5
+    defaultValueMicroVolts: 3000000
+aadc115: Analog.ADCChannelSource @ adc1 15
+    defaultValueMicroVolts: 3000000
+aadc10: Analog.ADCChannelSource @ adc1 0
+    defaultValueMicroVolts: 100000
+aadc113: Analog.ADCChannelSource @ adc1 13
+    defaultValueMicroVolts: 100000
+aadc114: Analog.ADCChannelSource @ adc1 14
+    defaultValueMicroVolts: 3300000
+aadc11: Analog.ADCChannelSource @ adc1 1
+    defaultValueMicroVolts: 1900000
+aadc12: Analog.ADCChannelSource @ adc1 2
+    defaultValueMicroVolts: 1900000
+aadc110: Analog.ADCChannelSource @ adc1 10
+    defaultValueMicroVolts: 2500000

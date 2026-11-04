@@ -1,0 +1,29 @@
+# CAN charger on the charger bus (500 kbit, 29-bit IDs, big-endian bytes): CHARGER_DATA 0x18ff50e5 every 1 s,
+# CHARGER_CONTROL 0x1806e5f4 received. Output current follows the commanded limit through a 500 ms lag while the
+# commanded limit is non-zero; output voltage 450.0 V, input 120 V AC, flags 0 (invented behaviour, vehicle CAN-library layouts).
+name: charger
+tick_us: 1000
+vars: {cmd_v: 0, cmd_i: 0, ctl: 0, i_out: 0}
+messages:
+  - name: CHARGER_DATA
+    id: 0x18ff50e5
+    extended: true
+    dir: tx
+    period_ms: 1000
+    dlc: 7
+    signals:
+      - {name: output_dc_voltage, start: 7, length: 16, order: big, scale: 0.1, expr: "450 if cmd_i > 0 else 0"}
+      - {name: output_current, start: 23, length: 16, order: big, scale: 0.1, expr: i_out}
+      - {name: flags, start: 32, length: 8, value: 0}
+      - {name: input_ac_voltage, start: 47, length: 16, order: big, scale: 0.1, value: 120}
+  - name: CHARGER_CONTROL
+    id: 0x1806e5f4
+    extended: true
+    dir: rx
+    dlc: 5
+    signals:
+      - {name: max_charging_voltage, start: 7, length: 16, order: big, scale: 0.1, var: cmd_v}
+      - {name: max_charging_current, start: 23, length: 16, order: big, scale: 0.1, var: cmd_i}
+      - {name: control, start: 32, length: 8, var: ctl}
+lags:
+  - {var: i_out, target: cmd_i, tau_ms: 500}

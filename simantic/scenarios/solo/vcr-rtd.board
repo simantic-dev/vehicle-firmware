@@ -1,0 +1,19 @@
+mux: SPI.SPIMultiplexer @ lpspi4
+    ActiveLowMask: 0x3
+adc0: SPI.ScriptedSpiSlave @ mux 0
+    file: "@SIMANTIC@/peers/solo/vcr_adc0.py"
+adc1: SPI.ScriptedSpiSlave @ mux 1
+    file: "@SIMANTIC@/peers/solo/vcr_adc1.py"
+gpio2:
+    0 -> mux@0
+    18 -> mux@1
+gpio7:
+    0 -> mux@0
+    18 -> mux@1
+expander: I2C.ScriptedI2cSlave @ lpi2c1 0x20
+    file: "@SIM_FIXTURES@/peers/i2c/mcp23017.py"
+    numberOfGpios: 2
+telem: CAN.ScriptedCanNode @ sysbus 0x80200000
+    file: "@SIMANTIC@/peers/solo/rtd_telem.py"
+invs: CAN.ScriptedCanNode @ sysbus 0x80210000
+    file: "@SIMANTIC@/peers/solo/inv4.py"

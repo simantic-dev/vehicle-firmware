@@ -1,0 +1,14 @@
+# CCU: schedule debug_print_task (commented out upstream) so the CCU state machine and charger current print on the USB console, which the scenarios read.
+diff --git a/CCU/src/main.cpp b/CCU/src/main.cpp
+index 84608ed..25b282c 100644
+--- a/CCU/src/main.cpp
++++ b/CCU/src/main.cpp
+@@ -50,7 +50,7 @@ void setup()
+     scheduler.schedule(receive_ethernet);
+     scheduler.schedule(send_ethernet);
+     scheduler.schedule(read_encoder_task);
+-    // scheduler.schedule(debug_print_task);
++    scheduler.schedule(debug_print_task);
+     scheduler.schedule(update_display_task);
+ }
+ 

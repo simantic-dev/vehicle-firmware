@@ -1,0 +1,13 @@
+# Stand-in for the charger control unit as the ACU sees it: CCU_STATUS 0xdd every 100 ms, charger_enabled from 0.8 s.
+name: ccu_stub
+tick_us: 1000
+messages:
+  - name: CCU_STATUS
+    id: 0xdd
+    dir: tx
+    period_ms: 100
+    dlc: 1
+    signals:
+      - {name: charger_enabled, start: 0, length: 1, expr: "1 if t_ms >= 800 else 0"}
+faults:
+  - {at_ms: 1000, action: silence}   # the control unit drops off the bus

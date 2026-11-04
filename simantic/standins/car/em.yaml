@@ -1,0 +1,13 @@
+# Energy meter on a CAN bus (500 kbit): EM_MEASUREMENT 0x100 every 4 ms, two big-endian int32, current then voltage, scale 1/65536.
+# Current ramps 5 A -> 65 A over 3 s while the voltage sags 420 V -> 390 V (invented profile; the layout is the vehicle CAN library's).
+name: energy_meter
+tick_us: 1000
+messages:
+  - name: EM_MEASUREMENT
+    id: 0x100
+    dir: tx
+    period_ms: 4
+    dlc: 8
+    signals:
+      - {name: em_current_ro, start: 7, length: 32, order: big, signed: true, scale: 0.000015259, expr: "5 + 0.02 * t_ms"}
+      - {name: em_voltage_ro, start: 39, length: 32, order: big, signed: true, scale: 0.000015259, expr: "420 - 0.01 * t_ms"}

@@ -1,0 +1,29 @@
+# Planner stand-in on the main CAN bus: speed set points (0xF2) and torque limits (0xF1), four int16 each, 100 Hz.
+name: planner
+tick_us: 500
+vars: {rpm: 0, nm: 0}
+messages:
+  - name: DB_SPEED
+    id: 0xF2
+    dir: tx
+    period_ms: 10
+    dlc: 8
+    signals:
+      - {name: s1, start: 0, length: 16, signed: true, expr: rpm}
+      - {name: s2, start: 16, length: 16, signed: true, expr: rpm}
+      - {name: s3, start: 32, length: 16, signed: true, expr: rpm}
+      - {name: s4, start: 48, length: 16, signed: true, expr: rpm}
+  - name: DB_TORQUE
+    id: 0xF1
+    dir: tx
+    period_ms: 10
+    dlc: 8
+    signals:
+      - {name: t1, start: 0, length: 16, signed: true, scale: 0.01, expr: nm}
+      - {name: t2, start: 16, length: 16, signed: true, scale: 0.01, expr: nm}
+      - {name: t3, start: 32, length: 16, signed: true, scale: 0.01, expr: nm}
+      - {name: t4, start: 48, length: 16, signed: true, scale: 0.01, expr: nm}
+faults:
+  - {at_ms: 7300, action: set, vars: {rpm: 3000, nm: 15}}
+  - {at_ms: 7700, action: set, vars: {rpm: 5000, nm: 8}}
+  - {at_ms: 8200, action: set, vars: {rpm: 0, nm: 0}}

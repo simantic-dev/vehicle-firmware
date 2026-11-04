@@ -1,0 +1,34 @@
+# SIM ONLY: the Teensy emulated EEPROM cannot be preloaded in the simulator, so an erased word (0xFFFFFFFF) returns a fixed pedal/steering calibration that the stimulus peers are written to match.
+diff --git a/VCF/lib/systems/include/EEPROMUtilities.hpp b/VCF/lib/systems/include/EEPROMUtilities.hpp
+index e6b9297..348f62e 100644
+--- a/VCF/lib/systems/include/EEPROMUtilities.hpp
++++ b/VCF/lib/systems/include/EEPROMUtilities.hpp
+@@ -16,7 +16,28 @@ namespace EEPROMUtilities
+      * Returns the 32-bit word stored at the given address.
+      * NOTE: This assumes BIG-ENDIAN formatting.
+      */
++    inline uint32_t read_eeprom_32bit_raw(uint32_t address);
++
++    inline uint32_t local_default_32bit(uint32_t address)
++    {
++        // SIM ONLY: stand-in calibration for an empty EEPROM (pedals 0-28, digital steering 32-36/48-52, analog steering 40-44/56-60)
++        switch (address)
++        {
++            case 0: return 700;  case 4: return 600;  case 8: return 3100;  case 12: return 2600;
++            case 16: return 800; case 20: return 700; case 24: return 3400; case 28: return 3000;
++            case 32: return 4096; case 36: return 12288; case 48: return 3686; case 52: return 12698;
++            case 40: return 819; case 44: return 3277; case 56: return 1024; case 60: return 3072;
++            default: return 0xFFFFFFFF;
++        }
++    }
++
+     inline uint32_t read_eeprom_32bit(uint32_t address)
++    {
++        const uint32_t raw = read_eeprom_32bit_raw(address);
++        return raw == 0xFFFFFFFF ? local_default_32bit(address) : raw;
++    }
++
++    inline uint32_t read_eeprom_32bit_raw(uint32_t address)
+     {
+         return (((uint32_t) EEPROM.read(address)) << 24) | (((uint32_t) EEPROM.read(address + 1)) << 16) | (((uint32_t) EEPROM.read(address + 2)) << 8) | EEPROM.read(address + 3);
+     }

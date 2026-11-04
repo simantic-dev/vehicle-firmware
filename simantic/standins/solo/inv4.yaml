@@ -1,0 +1,217 @@
+# 4 inverters on CAN3 (500 kbit): STATUS + DYNAMICS tx every 10 ms, CONTROL_WORD + CONTROL_INPUT rx.
+# HV present from hv_on_ms; quit_dc_on follows hv_enable; quit_inverter_on follows inverter_enable and driver_enable and quit_dc_on;
+# torque echo = positive torque limit through a 20 ms lag while enabled and the speed set point is > 0.
+name: inv4
+tick_us: 125
+vars:
+  hv_on_ms: 1000
+  inv_en1: 0
+  hv_en1: 0
+  drv_en1: 0
+  rm_err1: 0
+  spd1: 0
+  plim1: 0
+  nlim1: 0
+  tq1: 0
+  inv_en2: 0
+  hv_en2: 0
+  drv_en2: 0
+  rm_err2: 0
+  spd2: 0
+  plim2: 0
+  nlim2: 0
+  tq2: 0
+  inv_en3: 0
+  hv_en3: 0
+  drv_en3: 0
+  rm_err3: 0
+  spd3: 0
+  plim3: 0
+  nlim3: 0
+  tq3: 0
+  inv_en4: 0
+  hv_en4: 0
+  drv_en4: 0
+  rm_err4: 0
+  spd4: 0
+  plim4: 0
+  nlim4: 0
+  tq4: 0
+messages:
+  - name: INV1_STATUS
+    id: 0x80
+    shared: true
+    dir: tx
+    period_ms: 10.0
+    dlc: 8
+    signals:
+      - {name: system_ready, start: 8, length: 1, expr: "1 if (t_ms >= hv_on_ms) else 0"}
+      - {name: error, start: 9, length: 1, value: 0}
+      - {name: quit_dc_on, start: 11, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en1) else 0"}
+      - {name: dc_on, start: 12, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en1) else 0"}
+      - {name: quit_inverter_on, start: 13, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en1) and inv_en1 and drv_en1) else 0"}
+      - {name: inverter_on, start: 14, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en1) and inv_en1 and drv_en1) else 0"}
+      - {name: dc_bus_voltage, start: 16, length: 16, expr: "400 if (t_ms >= hv_on_ms) else 0"}
+  - name: INV1_DYNAMICS
+    id: 0x82
+    shared: true
+    dir: tx
+    period_ms: 10.125
+    dlc: 8
+    signals:
+      - {name: actual_power_w, start: 0, length: 32, value: 0}
+      - {name: actual_torque_nm_ro, start: 32, length: 16, signed: true, scale: 0.0098, expr: tq1}
+      - {name: actual_speed_rpm, start: 48, length: 16, signed: true, value: 0}
+  - name: INV1_CONTROL_WORD
+    id: 0x92
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: inverter_enable, start: 8, length: 1, var: inv_en1}
+      - {name: hv_enable, start: 9, length: 1, var: hv_en1}
+      - {name: driver_enable, start: 10, length: 1, var: drv_en1}
+      - {name: remove_error, start: 11, length: 1, var: rm_err1}
+  - name: INV1_CONTROL_INPUT
+    id: 0x99
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: speed_setpoint_rpm, start: 0, length: 16, signed: true, var: spd1}
+      - {name: positive_torque_limit, start: 16, length: 16, signed: true, scale: 0.0098, var: plim1}
+      - {name: negative_torque_limit, start: 32, length: 16, signed: true, scale: 0.0098, var: nlim1}
+  - name: INV2_STATUS
+    id: 0x85
+    shared: true
+    dir: tx
+    period_ms: 10.25
+    dlc: 8
+    signals:
+      - {name: system_ready, start: 8, length: 1, expr: "1 if (t_ms >= hv_on_ms) else 0"}
+      - {name: error, start: 9, length: 1, value: 0}
+      - {name: quit_dc_on, start: 11, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en2) else 0"}
+      - {name: dc_on, start: 12, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en2) else 0"}
+      - {name: quit_inverter_on, start: 13, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en2) and inv_en2 and drv_en2) else 0"}
+      - {name: inverter_on, start: 14, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en2) and inv_en2 and drv_en2) else 0"}
+      - {name: dc_bus_voltage, start: 16, length: 16, expr: "400 if (t_ms >= hv_on_ms) else 0"}
+  - name: INV2_DYNAMICS
+    id: 0x87
+    shared: true
+    dir: tx
+    period_ms: 10.375
+    dlc: 8
+    signals:
+      - {name: actual_power_w, start: 0, length: 32, value: 0}
+      - {name: actual_torque_nm_ro, start: 32, length: 16, signed: true, scale: 0.0098, expr: tq2}
+      - {name: actual_speed_rpm, start: 48, length: 16, signed: true, value: 0}
+  - name: INV2_CONTROL_WORD
+    id: 0x93
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: inverter_enable, start: 8, length: 1, var: inv_en2}
+      - {name: hv_enable, start: 9, length: 1, var: hv_en2}
+      - {name: driver_enable, start: 10, length: 1, var: drv_en2}
+      - {name: remove_error, start: 11, length: 1, var: rm_err2}
+  - name: INV2_CONTROL_INPUT
+    id: 0x102
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: speed_setpoint_rpm, start: 0, length: 16, signed: true, var: spd2}
+      - {name: positive_torque_limit, start: 16, length: 16, signed: true, scale: 0.0098, var: plim2}
+      - {name: negative_torque_limit, start: 32, length: 16, signed: true, scale: 0.0098, var: nlim2}
+  - name: INV3_STATUS
+    id: 0x70
+    shared: true
+    dir: tx
+    period_ms: 10.5
+    dlc: 8
+    signals:
+      - {name: system_ready, start: 8, length: 1, expr: "1 if (t_ms >= hv_on_ms) else 0"}
+      - {name: error, start: 9, length: 1, value: 0}
+      - {name: quit_dc_on, start: 11, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en3) else 0"}
+      - {name: dc_on, start: 12, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en3) else 0"}
+      - {name: quit_inverter_on, start: 13, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en3) and inv_en3 and drv_en3) else 0"}
+      - {name: inverter_on, start: 14, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en3) and inv_en3 and drv_en3) else 0"}
+      - {name: dc_bus_voltage, start: 16, length: 16, expr: "400 if (t_ms >= hv_on_ms) else 0"}
+  - name: INV3_DYNAMICS
+    id: 0x72
+    shared: true
+    dir: tx
+    period_ms: 10.625
+    dlc: 8
+    signals:
+      - {name: actual_power_w, start: 0, length: 32, value: 0}
+      - {name: actual_torque_nm_ro, start: 32, length: 16, signed: true, scale: 0.0098, expr: tq3}
+      - {name: actual_speed_rpm, start: 48, length: 16, signed: true, value: 0}
+  - name: INV3_CONTROL_WORD
+    id: 0x90
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: inverter_enable, start: 8, length: 1, var: inv_en3}
+      - {name: hv_enable, start: 9, length: 1, var: hv_en3}
+      - {name: driver_enable, start: 10, length: 1, var: drv_en3}
+      - {name: remove_error, start: 11, length: 1, var: rm_err3}
+  - name: INV3_CONTROL_INPUT
+    id: 0x97
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: speed_setpoint_rpm, start: 0, length: 16, signed: true, var: spd3}
+      - {name: positive_torque_limit, start: 16, length: 16, signed: true, scale: 0.0098, var: plim3}
+      - {name: negative_torque_limit, start: 32, length: 16, signed: true, scale: 0.0098, var: nlim3}
+  - name: INV4_STATUS
+    id: 0x75
+    shared: true
+    dir: tx
+    period_ms: 10.75
+    dlc: 8
+    signals:
+      - {name: system_ready, start: 8, length: 1, expr: "1 if (t_ms >= hv_on_ms) else 0"}
+      - {name: error, start: 9, length: 1, value: 0}
+      - {name: quit_dc_on, start: 11, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en4) else 0"}
+      - {name: dc_on, start: 12, length: 1, expr: "1 if ((t_ms >= hv_on_ms) and hv_en4) else 0"}
+      - {name: quit_inverter_on, start: 13, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en4) and inv_en4 and drv_en4) else 0"}
+      - {name: inverter_on, start: 14, length: 1, expr: "1 if (((t_ms >= hv_on_ms) and hv_en4) and inv_en4 and drv_en4) else 0"}
+      - {name: dc_bus_voltage, start: 16, length: 16, expr: "400 if (t_ms >= hv_on_ms) else 0"}
+  - name: INV4_DYNAMICS
+    id: 0x77
+    shared: true
+    dir: tx
+    period_ms: 10.875
+    dlc: 8
+    signals:
+      - {name: actual_power_w, start: 0, length: 32, value: 0}
+      - {name: actual_torque_nm_ro, start: 32, length: 16, signed: true, scale: 0.0098, expr: tq4}
+      - {name: actual_speed_rpm, start: 48, length: 16, signed: true, value: 0}
+  - name: INV4_CONTROL_WORD
+    id: 0x91
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: inverter_enable, start: 8, length: 1, var: inv_en4}
+      - {name: hv_enable, start: 9, length: 1, var: hv_en4}
+      - {name: driver_enable, start: 10, length: 1, var: drv_en4}
+      - {name: remove_error, start: 11, length: 1, var: rm_err4}
+  - name: INV4_CONTROL_INPUT
+    id: 0x98
+    shared: true
+    dir: rx
+    dlc: 8
+    signals:
+      - {name: speed_setpoint_rpm, start: 0, length: 16, signed: true, var: spd4}
+      - {name: positive_torque_limit, start: 16, length: 16, signed: true, scale: 0.0098, var: plim4}
+      - {name: negative_torque_limit, start: 32, length: 16, signed: true, scale: 0.0098, var: nlim4}
+lags:
+  - {var: tq1, target: "plim1 if (t_ms >= hv_on_ms and hv_en1 and inv_en1 and drv_en1 and spd1 > 0) else 0", tau_ms: 20}
+  - {var: tq2, target: "plim2 if (t_ms >= hv_on_ms and hv_en2 and inv_en2 and drv_en2 and spd2 > 0) else 0", tau_ms: 20}
+  - {var: tq3, target: "plim3 if (t_ms >= hv_on_ms and hv_en3 and inv_en3 and drv_en3 and spd3 > 0) else 0", tau_ms: 20}
+  - {var: tq4, target: "plim4 if (t_ms >= hv_on_ms and hv_en4 and inv_en4 and drv_en4 and spd4 > 0) else 0", tau_ms: 20}

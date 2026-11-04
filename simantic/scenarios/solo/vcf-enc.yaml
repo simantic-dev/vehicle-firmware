@@ -1,0 +1,7 @@
+machines:
+  vcf: {mcu: Teensy41, elf: ../../elf/vcf.elf, overlay: vcf-enc.board}
+media:
+  - {type: can, connect: [vcf.can1, vcf.sink]}
+  - {type: uart, connect: [vcf.lpuart4, vcf.enc]}
+quantum: 0.0001
+timeout: 3

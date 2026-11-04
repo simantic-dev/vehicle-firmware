@@ -1,0 +1,119 @@
+name: dash_can_inputs
+tick_us: 1000
+vars: {pack_v: 495.0, min_cell: 3.80, accel: 0.20, brake: 0.0, mech_brake: 0, bms_ok: 1, imd_ok: 1, latch_ok: 1, vstate: 1, dstate: 0, db_ctrl: 0, dial: 1, dc_bus: 495, speed_rpm: 3000, t_mot1: 40.0, t_inv1: 45.0, t_mot2: 42.0, t_inv2: 48.0, t_mot3: 41.0, t_inv3: 46.0, t_mot4: 43.0, t_inv4: 47.0}
+messages:
+  - name: BMS_VOLTAGES
+    id: 0xD7
+    dir: tx
+    dlc: 8
+    period_ms: 10
+    signals:
+      - {name: avg_cell, start: 0, length: 16, scale: 0.0001, expr: min_cell}
+      - {name: min_cell, start: 16, length: 16, scale: 0.0001}
+      - {name: max_cell, start: 32, length: 16, scale: 0.0001, expr: min_cell}
+      - {name: pack_v, start: 48, length: 16, scale: 0.01}
+  - name: ACU_OK
+    id: 0x500
+    dir: tx
+    dlc: 1
+    period_ms: 20
+    signals:
+      - {name: bms_ok, start: 0, length: 1}
+      - {name: imd_ok, start: 1, length: 1}
+      - {name: latch_ok, start: 2, length: 1}
+  - name: PEDALS_SYSTEM_DATA
+    id: 0xC0
+    dir: tx
+    dlc: 5
+    period_ms: 10
+    signals:
+      - {name: mech_brake, start: 4, length: 1}
+      - {name: accel, start: 8, length: 16, scale: 0.000015259}
+      - {name: brake, start: 24, length: 16, scale: 0.000015259}
+  - name: CAR_STATES
+    id: 0x207
+    dir: tx
+    dlc: 3
+    period_ms: 20
+    signals:
+      - {name: vstate, start: 0, length: 8}
+      - {name: dstate, start: 8, length: 8}
+      - {name: db_ctrl, start: 16, length: 1}
+  - name: DASH_INPUT
+    id: 0x300
+    dir: tx
+    dlc: 3
+    period_ms: 20
+    signals:
+      - {name: dial, start: 8, length: 8}
+  - name: INV1_DYNAMICS
+    id: 0x82
+    dir: tx
+    dlc: 8
+    period_ms: 10
+    signals:
+      - {name: speed_rpm, start: 48, length: 16, signed: true}
+  - name: INV1_STATUS
+    id: 0x80
+    dir: tx
+    dlc: 8
+    period_ms: 20
+    signals:
+      - {name: dc_bus, start: 16, length: 16}
+  - name: INV1_TEMPS
+    id: 0x81
+    dir: tx
+    dlc: 6
+    period_ms: 20
+    signals:
+      - {name: t_mot1, start: 0, length: 16, scale: 0.1, signed: true}
+      - {name: t_inv1, start: 16, length: 16, scale: 0.1, signed: true}
+  - name: INV2_STATUS
+    id: 0x85
+    dir: tx
+    dlc: 8
+    period_ms: 20
+    signals:
+      - {name: dc_bus, start: 16, length: 16}
+  - name: INV2_TEMPS
+    id: 0x86
+    dir: tx
+    dlc: 6
+    period_ms: 20
+    signals:
+      - {name: t_mot2, start: 0, length: 16, scale: 0.1, signed: true}
+      - {name: t_inv2, start: 16, length: 16, scale: 0.1, signed: true}
+  - name: INV3_STATUS
+    id: 0x70
+    dir: tx
+    dlc: 8
+    period_ms: 20
+    signals:
+      - {name: dc_bus, start: 16, length: 16}
+  - name: INV3_TEMPS
+    id: 0x71
+    dir: tx
+    dlc: 6
+    period_ms: 20
+    signals:
+      - {name: t_mot3, start: 0, length: 16, scale: 0.1, signed: true}
+      - {name: t_inv3, start: 16, length: 16, scale: 0.1, signed: true}
+  - name: INV4_STATUS
+    id: 0x75
+    dir: tx
+    dlc: 8
+    period_ms: 20
+    signals:
+      - {name: dc_bus, start: 16, length: 16}
+  - name: INV4_TEMPS
+    id: 0x76
+    dir: tx
+    dlc: 6
+    period_ms: 20
+    signals:
+      - {name: t_mot4, start: 0, length: 16, scale: 0.1, signed: true}
+      - {name: t_inv4, start: 16, length: 16, scale: 0.1, signed: true}
+faults:
+  - {at_ms: 1000, action: set, vars: {pack_v: 520.0, min_cell: 3.95, accel: 0.7, brake: 0.3, vstate: 3, t_mot2: 82.0, t_inv3: 66.0, dial: 3, db_ctrl: 1}}
+  - {at_ms: 2000, action: set, vars: {mech_brake: 1, brake: 0.9, accel: 0.0}}
+  - {at_ms: 3000, action: set, vars: {bms_ok: 0}}

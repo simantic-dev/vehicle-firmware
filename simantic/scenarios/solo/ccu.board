@@ -1,0 +1,29 @@
+tft: SPI.ScriptedSpiSlave @ lpspi4
+    file: "@SIM_FIXTURES@/peers/spi/ili9341.py"
+    numberOfGpios: 3
+gpio1:
+    29 -> tft@0
+    21 -> tft@1
+    20 -> tft@2
+gpio6:
+    29 -> tft@0
+    21 -> tft@1
+    20 -> tft@2
+aadc18: Analog.ADCChannelSource @ adc1 8
+    defaultValueMicroVolts: 3100000
+aadc23: Analog.ADCChannelSource @ adc2 3
+    defaultValueMicroVolts: 3000000
+aadc24: Analog.ADCChannelSource @ adc2 4
+    defaultValueMicroVolts: 50000
+stim: Scripted.ScriptedGpioPeer @ none
+    file: "@SIM_FIXTURES@/peers/gpio/pin_script.py"
+    config: "{\"idle\": {\"0\": 1, \"1\": 0, \"2\": 0, \"3\": 1}, \"events\": [{\"at_ms\": 1500, \"line\": 2, \"level\": 1}]}"
+    numberOfGpios: 4
+    0 -> gpio4@31 | gpio9@31
+    1 -> gpio2@18 | gpio7@18
+    2 -> gpio2@10 | gpio7@10
+    3 -> gpio4@6 | gpio9@6
+charger: CAN.ScriptedCanNode @ sysbus 0x80200000
+    file: "@SIMANTIC@/peers/solo/charger.py"
+acustub: CAN.ScriptedCanNode @ sysbus 0x80210000
+    file: "@SIMANTIC@/peers/solo/acu_stub.py"

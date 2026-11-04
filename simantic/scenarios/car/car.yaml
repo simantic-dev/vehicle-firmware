@@ -1,0 +1,25 @@
+# whole car: VCF, VCR, ACU, CCU (Teensy 4.1) + Dashboard (STM32H750VB)
+machines:
+  vcf: {mcu: Teensy41, elf: ../../elf/vcf.elf, overlay: vcf.board}
+  vcr: {mcu: Teensy41, elf: ../../elf/vcr.elf, overlay: vcr.board}
+  acu: {mcu: Teensy41, elf: ../../elf/acu.elf, overlay: acu.board}
+  ccu: {mcu: Teensy41, elf: ../../elf/ccu.elf, overlay: ccu.board}
+  dash: {mcu: STM32H750VB, elf: ../../elf/dash.elf, overlay: dash.board}
+media:
+  # main / telemetry bus, 1 Mbit: VCF CAN1, VCR CAN1, ACU CAN2, CCU CAN1, Dashboard FDCAN1, planner, bus monitor
+  - {type: can, connect: [vcf.can1, vcr.can1, acu.can2, ccu.can1, dash.fdcan1, vcr.db, vcf.mon]}
+  # VCF FRONT_AUX, 500 kbit (nothing on it)
+  - {type: can, connect: [vcf.can2, vcf.sink2]}
+  # inverter bus: VCR CAN3, 500 kbit
+  - {type: can, connect: [vcr.can3, vcr.invs]}
+  # energy meter: ACU CAN3, 500 kbit
+  - {type: can, connect: [acu.can3, acu.em]}
+  # charger: CCU CAN3, 500 kbit
+  - {type: can, connect: [ccu.can3, ccu.charger]}
+  - type: uart
+    connect: [vcf.lpuart4, vcf.enc]
+  - type: eth
+    connect: [vcf.enet, vcr.enet, vcr.dbeth, acu.enet, ccu.enet]
+    pcap: @OUT@/eth.pcap
+quantum: 0.0001
+timeout: 10

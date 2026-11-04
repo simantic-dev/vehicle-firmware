@@ -1,0 +1,6 @@
+machines:
+  dash: {mcu: STM32H750VB, elf: ../../elf/dash.elf, overlay: dash.board}
+media:
+  - {type: can, connect: [dash.fdcan1, dash.canin]}
+quantum: 0.0001
+timeout: 1.0

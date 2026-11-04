@@ -1,0 +1,7 @@
+machines:
+  ccu: {mcu: Teensy41, elf: ../../elf/ccu.elf, overlay: ccu.board}
+media:
+  - {type: can, connect: [ccu.can3, ccu.charger]}
+  - {type: can, connect: [ccu.can1, ccu.acustub]}
+quantum: 0.0001
+timeout: 4

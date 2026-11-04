@@ -1,0 +1,21 @@
+# CCU: build the ILI9341 on the hardware SPI bus (&SPI, dc, cs, rst) instead of bit-banged software SPI, so the display is driven through LPSPI4 and the display peer sees it.
+diff --git a/CCU/lib/interfaces/include/DisplayInterface.hpp b/CCU/lib/interfaces/include/DisplayInterface.hpp
+index 3dd5219..b1dcfd7 100644
+--- a/CCU/lib/interfaces/include/DisplayInterface.hpp
++++ b/CCU/lib/interfaces/include/DisplayInterface.hpp
+@@ -74,14 +74,7 @@ public:
+                         .last_display_timestamp = 0,
+                         .sliding_window_display_interval_ms = default_display_params::SLIDING_WINDOW_DISPLAY_INTERVAL_MS
+                     }
+-    ) : _display(
+-            pinout.teensy_lcd_cs_pin,
+-            pinout.teensy_lcd_dc_pin,
+-            pinout.teensy_lcd_mosi_pin,
+-            pinout.teensy_lcd_sck_pin,
+-            pinout.teensy_lcd_reset_pin,
+-            pinout.teensy_lcd_miso_pin
+-        ),
++    ) : _display(&SPI, pinout.teensy_lcd_dc_pin, pinout.teensy_lcd_cs_pin, pinout.teensy_lcd_reset_pin),
+         _pinout(pinout),
+         _config(config),
+         _display_time(0),

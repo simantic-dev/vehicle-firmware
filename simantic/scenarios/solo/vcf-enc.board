@@ -1,0 +1,19 @@
+mux: SPI.SPIMultiplexer @ lpspi4
+    ActiveLowMask: 0x3
+adc0: SPI.ScriptedSpiSlave @ mux 0
+    file: "@SIMANTIC@/peers/solo/vcf_adc0.py"
+adc1: SPI.ScriptedSpiSlave @ mux 1
+    file: "@SIMANTIC@/peers/solo/vcf_adc1.py"
+gpio2:
+    0 -> mux@0
+gpio7:
+    0 -> mux@0
+gpio1:
+    28 -> mux@1
+gpio6:
+    28 -> mux@1
+enc: UART.ScriptedUartPeer @ sysbus 0x60200000
+    file: "@SIMANTIC@/peers/solo/enc.py"
+    baudRate: 115200
+sink: CAN.ScriptedCanNode @ sysbus 0x80200000
+    file: "@SIMANTIC@/peers/solo/sink.py"

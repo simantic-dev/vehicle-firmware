@@ -1,0 +1,10 @@
+# charging: ACU + CCU + energy meter + charger
+machines:
+  acu: {mcu: Teensy41, elf: ../../elf/acu.elf, overlay: acu-ch.board}
+  ccu: {mcu: Teensy41, elf: ../../elf/ccu.elf, overlay: ccu-ch.board}
+media:
+  - {type: can, connect: [acu.can2, ccu.can1, ccu.mon]}
+  - {type: can, connect: [acu.can3, acu.em]}
+  - {type: can, connect: [ccu.can3, ccu.charger]}
+quantum: 0.0001
+timeout: 9

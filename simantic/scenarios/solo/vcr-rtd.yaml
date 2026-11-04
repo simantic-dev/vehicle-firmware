@@ -1,0 +1,7 @@
+machines:
+  vcr: {mcu: Teensy41, elf: ../../elf/vcr.elf, overlay: vcr-rtd.board}
+media:
+  - {type: can, connect: [vcr.can1, vcr.telem]}
+  - {type: can, connect: [vcr.can3, vcr.invs]}
+quantum: 0.0001
+timeout: 4

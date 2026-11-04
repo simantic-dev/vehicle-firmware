@@ -1,0 +1,46 @@
+# Stand-in for the battery monitor as the charger control unit sees it (1 Mbit bus): BMS_STATUS 0xdb (acu_state 2 = charging
+# from 1.0 s, 1 before), BMS_VOLTAGES 0xd7, BMS_TEMPS 0xd9, STATE_OF_CHARGE 0x41e, EM_MEASUREMENT 0x100 (big-endian int32 x 2).
+name: acu_stub
+tick_us: 1000
+messages:
+  - name: BMS_STATUS
+    id: 0xdb
+    dir: tx
+    period_ms: 100
+    dlc: 1
+    signals:
+      - {name: acu_state, start: 0, length: 8, expr: "2 if t_ms >= 1000 else 1"}
+  - name: BMS_VOLTAGES
+    id: 0xd7
+    dir: tx
+    period_ms: 100
+    dlc: 8
+    signals:
+      - {name: average_cell_voltage_ro, start: 0, length: 16, scale: 0.0001, value: 3.60}
+      - {name: min_cell_voltage_ro, start: 16, length: 16, scale: 0.0001, value: 3.55}
+      - {name: max_cell_voltage_ro, start: 32, length: 16, scale: 0.0001, value: 3.65}
+      - {name: total_pack_voltage_ro, start: 48, length: 16, scale: 0.01, value: 453.6}
+  - name: BMS_TEMPS
+    id: 0xd9
+    dir: tx
+    period_ms: 100
+    dlc: 6
+    signals:
+      - {name: max_board_temp_ro, start: 0, length: 16, signed: true, scale: 0.01, value: 31.5}
+      - {name: min_cell_temp_ro, start: 16, length: 16, signed: true, scale: 0.01, value: 24.0}
+      - {name: max_cell_temp_ro, start: 32, length: 16, signed: true, scale: 0.01, value: 27.5}
+  - name: STATE_OF_CHARGE
+    id: 0x41e
+    dir: tx
+    period_ms: 100
+    dlc: 8
+    signals:
+      - {name: SoC_ro, start: 0, length: 16, scale: 0.01, value: 62.5}
+  - name: EM_MEASUREMENT
+    id: 0x100
+    dir: tx
+    period_ms: 20
+    dlc: 8
+    signals:
+      - {name: em_current_ro, start: 7, length: 32, order: big, signed: true, scale: 0.000015259, value: 3.0}
+      - {name: em_voltage_ro, start: 39, length: 32, order: big, signed: true, scale: 0.000015259, value: 453.6}

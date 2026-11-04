@@ -1,0 +1,26 @@
+# Dashboard: fix the initalize_all_interfaces typo in the header and call initialize_all_interfaces() first in setup(); without it no interface exists and the Dash HardFaults at 21 ms (already fixed on upstream feat/DASHBOARD/UI).
+diff --git a/Dashboard/include/Dash_Tasks.h b/Dashboard/include/Dash_Tasks.h
+index 2737b71..d4a1727 100644
+--- a/Dashboard/include/Dash_Tasks.h
++++ b/Dashboard/include/Dash_Tasks.h
+@@ -20,7 +20,7 @@
+ #include "VCRInterface.h"
+ 
+ 
+-void initalize_all_interfaces();
++void initialize_all_interfaces();
+ 
+ ::HT_TASK::TaskResponse run_update_neopixels_task(const unsigned long& sys_micros, const HT_TASK::TaskInfo& task_info);
+ ::HT_TASK::TaskResponse screen_refresh(const unsigned long& sys_micros, const HT_TASK::TaskInfo& task_info);
+diff --git a/Dashboard/src/main.cpp b/Dashboard/src/main.cpp
+index 36366f1..535fbbb 100644
+--- a/Dashboard/src/main.cpp
++++ b/Dashboard/src/main.cpp
+@@ -21,6 +21,7 @@ HT_TASK::Task refresh_screen_task(HT_TASK::DUMMY_FUNCTION, &screen_refresh, Dash
+ 
+ void setup()
+ {
++    initialize_all_interfaces();
+ 
+     scheduler.setTimingFunction(micros);
+     scheduler.schedule(can_task);
