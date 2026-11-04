@@ -653,7 +653,7 @@ void BMSDriverGroup<num_chips, num_chip_selects, chip_type>::_store_temperature_
 
         max_min_reference.total_thermistor_temps -= bms_data.cell_temperatures[cell_temp_index];
         float thermistor_resistance = (2740 / (gpio_in / 50000.0)) - 2740;
-        bms_data.cell_temperatures[cell_temp_index] = 1 / ((1 / 298.15) + (1 / 3984.0) * log(thermistor_resistance / 10000.0)) - 272.15; // calculation for thermistor temperature in C
+        bms_data.cell_temperatures[cell_temp_index] = 1 / ((1 / 298.15) + (1 / 3984.0) * log(thermistor_resistance / 10000.0)) - 273.15; // calculation for thermistor temperature in C
         max_min_reference.total_thermistor_temps += bms_data.cell_temperatures[cell_temp_index];
 
         if (bms_data.cell_temperatures[cell_temp_index] > max_min_reference.max_cell_temp)
