@@ -97,16 +97,16 @@ steering 180 -> 150 deg (4.6 s) -> 210 deg (7.0 s) -> 180 deg (8.2 s); dial 4 fr
 
 The Dash firmware parses inverter status but draws no inverter error, so the inverter fault is visible on the bus and the VCR but not on the Dash.
 
-### Screens
+### Screens (inherited, `unverified` for this run: not produced by the 0.10.0 runs; see `screenshots/` for the images from this run)
 
 Dash (320x240 Sharp memory LCD) at 1.5 s, 3.6 s (brake held), 5.5 s (accelerator bar full, temperatures rising), 7.6 s (Drivebrain mode "04"), 9.9 s (BMS fault):
 
-![Dash 1.5 s](docs/img/dash-1.5s.png) ![Dash 3.6 s](docs/img/dash-3.6s.png) ![Dash 5.5 s](docs/img/dash-5.5s.png)
-![Dash 7.6 s](docs/img/dash-7.6s.png) ![Dash 9.9 s](docs/img/dash-9.9s.png)
+![Dash 1.5 s](docs/img-inherited-unverified/dash-1.5s.png) ![Dash 3.6 s](docs/img-inherited-unverified/dash-3.6s.png) ![Dash 5.5 s](docs/img-inherited-unverified/dash-5.5s.png)
+![Dash 7.6 s](docs/img-inherited-unverified/dash-7.6s.png) ![Dash 9.9 s](docs/img-inherited-unverified/dash-9.9s.png)
 
 CCU (ILI9341) while charging at 120 V, and at the end of the drive run (state machine at CHARGE 120 UNLATCHED, stale ACU numbers):
 
-![CCU charging](docs/img/ccu-charging.png) ![CCU drive end](docs/img/ccu-drive-end.png)
+![CCU charging](docs/img-inherited-unverified/ccu-charging.png) ![CCU drive end](docs/img-inherited-unverified/ccu-drive-end.png)
 
 The Dash screens at the listed times were produced by replaying the recorded main-bus log into the Dash alone (`tools/replay.sh`);
 the replay's final framebuffer is bit-identical to the full run's.

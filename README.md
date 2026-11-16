@@ -11,8 +11,20 @@ on; the sim-only patches apply to that commit, not to current `main`). Details: 
 | --- | --- | --- |
 | ACU | Teensy 4.1 (i.MX RT1062) | boots; reads its LTC6811 chain stand-ins; drives CAN2/CAN3 |
 | CCU | Teensy 4.1 | boots; ILI9341 on LPSPI4; reaches charging, `CHARGER_CONTROL` 530 V / 0.2 A seen by the charger stand-in at 6.849 s |
-| Dashboard | STM32H750 | runs 3 s without a fault in the car scenario; screen contents not inspected: `unverified` |
+| Dashboard | STM32H750 | runs 3 s without a fault in the car scenario; screen inspected, see below |
 | VCF, VCR | Teensy 4.1 | **do not boot on this sim**: BusFault, see gaps |
+
+**Screenshots from this run** (`sim` 0.10.0 build f219eb31, 2026-11-15; images in `sim/screenshots/`):
+
+| Image | What it shows |
+| --- | --- |
+| ![Dashboard](sim/screenshots/dash-car-2.9s.png) | Dashboard (STM32H750, 320x240 Sharp memory LCD) at 2.9 s of the 3 s `car` run: gear/mode "00", cell value 3.50, INV 0, MTR 0, accelerator bar empty, battery bar about a quarter filled. Matches the ACU's 3.50 V minimum cell; the inverter values are 0 because VCF/VCR did not boot (see gaps). |
+| ![CCU](sim/screenshots/ccu-charge-7s.png) | CCU (ILI9341) at 7 s of the `charge` run: "CCU SM: CHARGING 120", cell max 3.920 / min 3.500 / avg 3.710 V, pack 467.450 V, board temp max 41.0 C, current scalar 30 %, state of charge 4.34 %. |
+| ![CCU car](sim/screenshots/ccu-car-3s.png) | CCU at 3 s of the `car` run, for comparison (busy main bus). |
+
+Signals from the `charge` run, as printed on the CCU's USB console: pack voltage reads 0 V until 4.3 s, then 467.45 V; the CCU's state goes 0 to 1 at 3.8 s, 2 at 6.34 s, 3 (charging) at 6.6 s, with the calculated charge current 0.28 A at 6.6 s and 0.29 A at 6.85 s.
+
+![charge signals](sim/screenshots/charge-signals.svg)
 
 **Scenario** (`sim graph --scenario sim/scenarios/car/charge.yaml`, ADC pads omitted). The whole-car graph (`car.yaml`) adds VCF, VCR and the Dashboard:
 
