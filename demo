@@ -1,11 +1,59 @@
 #!/bin/sh
-# HyTech car charging: ACU + CCU + energy meter + charger on a simulated CAN bus. Usage: ./demo [seconds]
-# Needs the ACU and CCU images from sim/build.sh (PlatformIO). Uses `sim` from PATH; SIM=/path/to/sim overrides.
+# HyTech charging car: the unmodified ACU and CCU firmware on two simulated Teensy 4.1s, with CAN stand-ins for the
+# pack, the energy meter and the charger (sim/run.sh charge). The CCU console and the charger stand-in log are decoded
+# while the run goes. ./demo [seconds]  run it (default 7 virtual s; several minutes wall clock on a laptop)
+# ./demo build  build the ACU and CCU images first (PlatformIO)
 set -eu
-SIM="${SIM:-sim}"
 cd "$(dirname "$0")"
+if [ "${1:-}" = build ]; then exec sh sim/build.sh acu ccu; fi
+SIM="${SIM:-sim}"
 command -v "$SIM" >/dev/null || { echo "sim not found. Install it: curl -fsSL https://simantic.com/install | sh" >&2; exit 1; }
-[ -f sim/build/elf/acu.elf ] && [ -f sim/build/elf/ccu.elf ] || { echo "build first: sim/build.sh acu ccu" >&2; exit 1; }
-# sim/run.sh prepares the scenario and sets the stand-in environment; the console is in sim/build/out/demo/uart.txt
-sh sim/run.sh charge demo "${1:-7}" --ascii > /dev/null
-grep --line-buffered -h -E 'CHARGER_CONTROL|Charging State|Charger Current' sim/build/out/demo/stderr.txt sim/build/out/demo/uart.txt
+[ -f sim/build/elf/acu.elf ] && [ -f sim/build/elf/ccu.elf ] || { echo "not built yet: ./demo build" >&2; exit 1; }
+OUT=sim/build/out/demo
+mkdir -p "$OUT"
+rm -f "$OUT/uart.txt" "$OUT/stderr.txt"
+# State names come from the CCU's own enum, not a copy in this script.
+names=$(sed -n '/enum class ChargerState_e/,/};/p' CCU/lib/state_machine/include/ChargerStateMachine.hpp \
+  | sed -n 's/^ *\([A-Z][A-Z_0-9]*\).*/\1/p' | grep -v '^NUM_' | tr '\n' ' ')
+sh sim/run.sh charge demo "${1:-7}" --ascii > /dev/null 2>&1 &
+run=$!
+until [ -f "$OUT/uart.txt" ] && [ -f "$OUT/stderr.txt" ] || ! kill -0 "$run" 2>/dev/null; do sleep 1; done
+tail -n +1 -F "$OUT/uart.txt" "$OUT/stderr.txt" | awk -v names="$names" '
+  function trim(s) { sub(/^ +/, "", s); sub(/ +$/, "", s); return s }
+  BEGIN { n = split(names, S, " "); last = -1; sec = -1 }
+  /^==>/ { next }
+  /^\[ccu\] / {
+    t = substr($2, 2) + 0
+    lbl = $0; sub(/^.*\(usb1\) /, "", lbl); c = index(lbl, ":")
+    k = trim(substr(lbl, 1, c - 1)); v = trim(substr(lbl, c + 1))
+    if (k == "Charging State") {
+      st = v + 0
+      if (st != last) { last = st; printf "ccu  %5.2fs  state %d %s\n", t, st, S[st + 1] }
+    }
+    if (k == "Pack Voltage") pack = v + 0
+    if (k == "Charger Current") chg = (v + 0) / 10    # output_current_low: 0.1 A units
+    if (k == "Calc Charge Current") calc = v + 0
+    if (int(t) != sec && k == "Calc Charge Current") {
+      sec = int(t)
+      printf "ccu  %5.2fs  pack %6.2f V  charger out %4.1f A  CCU command %4.1f A\n", t, pack, chg, calc
+    }
+    next
+  }
+  /^\[charger\]/ && /CHARGER_CONTROL/ {
+    ms = $2 + 0
+    for (i = 1; i <= NF; i++) {
+      if ($i ~ /^max_charging_voltage=/) { V = $i; sub(/.*=/, "", V) }
+      if ($i ~ /^max_charging_current=/) { I = $i; sub(/.*=/, "", I) }
+      if ($i ~ /^control=/) { C = $i; sub(/.*=/, "", C) }
+    }
+    printf "charger rx CHARGER_CONTROL %6.2fs  max %s V, %s A, control %s\n", ms / 1000, V, I, C
+    next
+  }
+  END {
+    if (last < 0) { print "no CCU charging state seen: see sim/build/out/demo/uart.txt"; exit 1 }
+    printf "done: CCU state %d %s, pack %.2f V, charger out %.1f A, last CHARGER_CONTROL %s V, %s A\n", last, S[last + 1], pack, chg, V, I
+  }' &
+decode=$!
+wait "$run"
+pkill -f 'tail -n [+]1 -F' 2>/dev/null || true
+wait "$decode"

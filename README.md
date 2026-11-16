@@ -1,18 +1,46 @@
 ## Demo: the charging car in simulation
 
 ```sh
-git clone -b sim-demo https://github.com/simantic-dev/vehicle-firmware && cd vehicle-firmware && sim/build.sh acu ccu && ./demo
+./demo          # after ./demo build (PlatformIO, once); about 6 minutes of wall clock on a laptop
 ```
 
-You need `sim` 0.10.0 or newer and PlatformIO. `curl -fsSL https://simantic.com/install | sh` installs `sim`.
+![charging state progression in simulation](media/hytech-charge.gif)
 
-![charging state in simulation](media/hytech-charge.gif)
+```mermaid
+flowchart LR
+  acu["ACU<br/>Teensy 4.1, acu-prod"]
+  ccu["CCU<br/>Teensy 4.1, ccu-prod"]
+  ltc["LTC6811 cell chains<br/>peers/car/acu_ltc0.py, acu_ltc1.py"]
+  max["MAX1148 ADC<br/>peers/car/acu_max1148.py"]
+  em["energy meter<br/>peers/car/em.py"]
+  charger["charger<br/>standins/car/charger.yaml"]
+  tft["ILI9341 display<br/>peers/generic/spi/ili9341.py"]
+  mon["bus monitor<br/>peers/car/canlog.py"]
+  main(("main CAN, 1 Mbit"))
+  emb(("energy-meter CAN, 500 kbit"))
+  chb(("charger CAN, 500 kbit"))
+  acu -- "CAN2: pack and cell data" --- main
+  ccu -- "CAN1: charge state and commands" --- main
+  mon --- main
+  acu -- "CAN3" --- emb
+  em --- emb
+  ccu -- "CAN3: CHARGER_CONTROL out, CHARGER_DATA in" --- chb
+  charger --- chb
+  acu -- "lpspi3 mux: LTC6811 reads" --> ltc
+  acu -- "lpspi4 mux: MAX1148" --> max
+  ccu -- "lpspi4: display" --> tft
+  ccu -- "USB1 console: state, pack, charger current" --> host["terminal (./demo)"]
+```
 
 The ACU and CCU firmware images are HyTech Racing's production code, built with the fork's sim-only patches and run on
-simulated Teensy 4.1s over CAN. The battery pack (the LTC6811 chain), the energy meter and the charger are Python
-stand-ins: they send and answer CAN frames at the transaction level, with invented behaviour and no electrical model.
-The CCU's charging state moves from idle to state 3 by 6.8 s of virtual time, and the charger stand-in receives
-`CHARGER_CONTROL` from it. The GIF shows the CCU console lines only; the full car run is in the section below.
+simulated Teensy 4.1s over CAN. The LTC6811 pack, the energy meter and the charger are Python stand-ins: they send and
+answer CAN frames at transaction level, with invented behaviour and no electrical model. The demo decodes the CCU's own
+USB console (charging state from its enum, pack voltage, charger output current, its computed command) and the charger
+stand-in's log of the `CHARGER_CONTROL` it received, as the run goes. Known gaps: the run is 7 s of virtual time and takes
+several minutes of wall clock on a laptop (about 6 min under load here); the charger's output current is still 0.0 A at
+7 s because the stand-in ramps with a 500 ms lag after the 6.85 s command; the VCF and VCR do not boot on `sim` 0.10.0
+and are not in this demo; the 240 V path is not exercised. Prerequisites: `sim` 0.10.0 (`curl -fsSL https://simantic.com/install | sh`)
+and PlatformIO for `./demo build`.
 
 ## This fork: the car in a simulator
 
