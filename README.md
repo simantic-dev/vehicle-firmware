@@ -1,3 +1,19 @@
+## Demo: the charging car in simulation
+
+```sh
+git clone -b sim-demo https://github.com/simantic-dev/vehicle-firmware && cd vehicle-firmware && sim/build.sh acu ccu && ./demo
+```
+
+You need `sim` 0.10.0 or newer and PlatformIO. `curl -fsSL https://simantic.com/install | sh` installs `sim`.
+
+![charging state in simulation](media/hytech-charge.gif)
+
+The ACU and CCU firmware images are HyTech Racing's production code, built with the fork's sim-only patches and run on
+simulated Teensy 4.1s over CAN. The battery pack (the LTC6811 chain), the energy meter and the charger are Python
+stand-ins: they send and answer CAN frames at the transaction level, with invented behaviour and no electrical model.
+The CCU's charging state moves from idle to state 3 by 6.8 s of virtual time, and the charger stand-in receives
+`CHARGER_CONTROL` from it. The GIF shows the CCU console lines only; the full car run is in the section below.
+
 ## This fork: the car in a simulator
 
 Simantic's fork of HyTech Racing's firmware monorepo, with a `sim/` directory that runs the real firmware in the Simantic simulator.

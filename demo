@@ -1,0 +1,11 @@
+#!/bin/sh
+# HyTech car charging: ACU + CCU + energy meter + charger on a simulated CAN bus. Usage: ./demo [seconds]
+# Needs the ACU and CCU images from sim/build.sh (PlatformIO). Uses `sim` from PATH; SIM=/path/to/sim overrides.
+set -eu
+SIM="${SIM:-sim}"
+cd "$(dirname "$0")"
+command -v "$SIM" >/dev/null || { echo "sim not found. Install it: curl -fsSL https://simantic.com/install | sh" >&2; exit 1; }
+[ -f sim/build/elf/acu.elf ] && [ -f sim/build/elf/ccu.elf ] || { echo "build first: sim/build.sh acu ccu" >&2; exit 1; }
+# sim/run.sh prepares the scenario and sets the stand-in environment; the console is in sim/build/out/demo/uart.txt
+sh sim/run.sh charge demo "${1:-7}" --ascii > /dev/null
+grep --line-buffered -h -E 'CHARGER_CONTROL|Charging State|Charger Current' sim/build/out/demo/stderr.txt sim/build/out/demo/uart.txt
