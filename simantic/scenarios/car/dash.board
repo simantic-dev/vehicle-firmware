@@ -1,8 +1,0 @@
-rcc:
-    hseFrequency: 25000000
-lcd: SPI.ScriptedSpiSlave @ spi2
-    file: "@SIM_FIXTURES@/peers/spi/sharp_memlcd.py"
-    numberOfGpios: 3
-
-gpioPortB:
-    4 -> lcd@1

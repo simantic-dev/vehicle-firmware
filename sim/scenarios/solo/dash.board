@@ -1,0 +1,10 @@
+rcc:
+    hseFrequency: 25000000
+lcd: SPI.ScriptedSpiSlave @ spi2
+    file: "@SIMANTIC@/peers/generic/spi/sharp_memlcd.py"
+    numberOfGpios: 3
+
+gpioPortB:
+    4 -> lcd@1
+canin: CAN.ScriptedCanNode @ sysbus 0x80200000
+    file: "@SIMANTIC@/peers/solo/dash_can.py"
