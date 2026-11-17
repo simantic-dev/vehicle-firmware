@@ -56,7 +56,7 @@ on; the sim-only patches apply to that commit, not to current `main`). Details: 
 | ACU | Teensy 4.1 (i.MX RT1062) | boots; reads its LTC6811 chain stand-ins; drives CAN2/CAN3 |
 | CCU | Teensy 4.1 | boots; ILI9341 on LPSPI4; reaches charging, `CHARGER_CONTROL` 530 V / 0.2 A seen by the charger stand-in at 6.849 s |
 | Dashboard | STM32H750 | runs 3 s without a fault in the car scenario; screen inspected, see below |
-| VCF, VCR | Teensy 4.1 | **do not boot on this sim**: BusFault, see gaps |
+| VCF, VCR | Teensy 4.1 | **do not boot on `sim` 0.10.2 either** (re-run 2026-11-17, build 83eb7a66): same BusFault, see gaps |
 
 **Screenshots from this run** (`sim` 0.10.0 build f219eb31, 2026-11-15; images in `sim/screenshots/`):
 
@@ -116,7 +116,7 @@ flowchart LR
 The original author's 11 s whole-car drive cycle (600 s wall) was not re-run here: `unverified`.
 
 **Gaps, with the evidence:**
-- VCF and VCR: `FAIL: machine 'vcf' ended in BusFault at pc=0x0001382e (tempmonGetTemp)`, same for `vcr` at 0x0001680e, faulting pc in `analog_init` (Teensy core temperature-monitor read). Reproduced on the VCR alone. A model gap in the released `sim` (the i.MX RT1062 TEMPMON block is in the engine source but not in this release, `unverified` whether newer builds boot); not worked around.
+- Re-run on `sim` 0.10.2 (build 83eb7a66), 2026-11-17: `vcf-i2c` and `vcr-rtd` (3 s guest, 17 s wall each) end in the same BusFault at the same pcs (0x0001382e VCF, 0x0001680e VCR), no USB console output, no GIF for the boards. The faulting instruction is the `ldr` in the Teensy core's `tempmonGetTemp` that polls TEMPSENSE0 (FINISHED, bit 2) at 0x400D8180, which is the i.MX RT1062 temperature-monitor register in the reference manual, so the firmware access is valid and the block is absent from the model. Original 0.10.0 record: `FAIL: machine 'vcf' ended in BusFault at pc=0x0001382e (tempmonGetTemp)`, same for `vcr` at 0x0001680e, faulting pc in `analog_init` (Teensy core temperature-monitor read). Reproduced on the VCR alone. A model gap in the released `sim` (the i.MX RT1062 TEMPMON block is in the engine source but not in this release, `unverified` whether newer builds boot); not worked around.
 - ACU and CCU: `[bus] unhandled write: 0x400c4044`, once per run, no visible effect.
 - Dashboard needs `rcc: hseFrequency: 25000000` in its board file, otherwise FDCAN drops every 1 Mbit frame.
 - The CCU stand-in display reports `missing_end_trailer` diagnostics from the display peer.
