@@ -16,7 +16,7 @@ gpio6:
     28 -> mux@1
 adcmux: SPI.SPIMultiplexer @ lpspi4
     ActiveLowMask: 0x1
-adc0: SPI.ScriptedSpiSlave @ adcmux 0
+vadc0: SPI.ScriptedSpiSlave @ adcmux 0
     file: "@SIMANTIC@/peers/car/acu_max1148.py"
 em: CAN.ScriptedCanNode @ sysbus 0x80200000
     file: "@SIMANTIC@/peers/car/em.py"

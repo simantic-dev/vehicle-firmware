@@ -64,7 +64,7 @@ ccu-prod / dash-dfu-prod`. `PATCHES=0 sim/build.sh` builds the stock firmware. E
 
 **Status of the numbers below.** The drive-cycle, speed and screenshot sections were produced by the original author with an
 earlier pyrite build. They were NOT reproduced with the released `sim` 0.10.0; see the top-level README for what was
-re-run (the VCF and VCR do not boot on 0.10.0). Treat everything from here to "Known limits" as `unverified`.
+re-run (the VCF and VCR booted on 0.10.3 after the `vadc0`/`vadc1` scenario rename; the drive-cycle numbers were not reproduced). Treat everything from here to "Known limits" as `unverified`.
 
 Decoding helpers (`tools/`): `build_decoder.sh` + `gen_htcan.py` build a CAN decoder from the firmware's generated `ht_can.h`;
 `declog.py` prints a bus log decoded; `decframes.py` does the same for `--frames` output; `usbtext.py` / `vcrtl.py` turn the USB console

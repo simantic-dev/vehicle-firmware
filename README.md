@@ -38,8 +38,8 @@ answer CAN frames at transaction level, with invented behaviour and no electrica
 USB console (charging state from its enum, pack voltage, charger output current, its computed command) and the charger
 stand-in's log of the `CHARGER_CONTROL` it received, as the run goes. Known gaps: the run is 7 s of virtual time and takes
 several minutes of wall clock on a laptop (about 6 min under load here); the charger's output current is still 0.0 A at
-7 s because the stand-in ramps with a 500 ms lag after the 6.85 s command; the VCF and VCR do not boot on `sim` 0.10.0
-and are not in this demo; the 240 V path is not exercised. Prerequisites: `sim` 0.10.0 (`curl -fsSL https://simantic.com/install | sh`)
+7 s because the stand-in ramps with a 500 ms lag after the 6.85 s command; the VCF and VCR are not part of this demo
+(they boot since the scenario naming fix, see below); the 240 V path is not exercised. Prerequisites: `sim` 0.10.0 (`curl -fsSL https://simantic.com/install | sh`)
 and PlatformIO for `./demo build`.
 
 ## This fork: the car in a simulator
@@ -49,20 +49,27 @@ Simantic's fork of HyTech Racing's firmware monorepo, with a `sim/` directory th
 and this section are added; nothing is offered to or published at upstream. Based on upstream `develop` at a84cb75 (`main` has moved
 on; the sim-only patches apply to that commit, not to current `main`). Details: [sim/README.md](sim/README.md).
 
-**What runs** (`sim` 0.10.0 build f219eb31, 2026-11-15, guest time bounded, all on the unmodified production envs plus 5 sim patches):
+**What runs** (re-run 2026-11-17 on `sim` 0.10.3 (build 8a6a23df), guest time bounded to 3 s (`charge`: 7 s), all on the unmodified production envs plus 5 sim patches; numbers from the earlier 0.10.0 runs (build f219eb31, 2026-11-15) are labelled as such):
 
 | Board | MCU | Result |
 | --- | --- | --- |
 | ACU | Teensy 4.1 (i.MX RT1062) | boots; reads its LTC6811 chain stand-ins; drives CAN2/CAN3 |
 | CCU | Teensy 4.1 | boots; ILI9341 on LPSPI4; reaches charging, `CHARGER_CONTROL` 530 V / 0.2 A seen by the charger stand-in at 6.849 s |
 | Dashboard | STM32H750 | runs 3 s without a fault in the car scenario; screen inspected, see below |
-| VCF, VCR | Teensy 4.1 | **do not boot on `sim` 0.10.2 either** (re-run 2026-11-17, build 83eb7a66): same BusFault, see gaps |
+| VCF | Teensy 4.1 | boots (`vcf-enc`, 3 s guest, 11 s wall): 1.37 MB of UART capture, 'Pedals Info' banner and ADC/dash-button tables on the USB console, 2201 lpuart4 encoder lines, no FAIL. In the `car` run it puts `PEDALS_SYSTEM_DATA` (0xC0), `FRONT_SUSPENSION` (0xED) and steering frames on the bus |
+| VCR | Teensy 4.1 | boots (`vcr-rtd`, 3 s guest, 28 s wall): 0.71 MB of UART capture, the inverter stand-in decodes its `INVn_CONTROL_WORD` / `INVn_CONTROL_INPUT` frames from 415 ms, no FAIL |
+
+VCF and VCR earlier BusFaulted in `tempmonGetTemp` on `sim` 0.10.0 and 0.10.2. That was **a naming collision in this fork's scenario files, not a gap in the RT1062 model**: the overlay boards named two SPI peers `adc0` and `adc1`, and the name `adc1` silently replaced the chip's own ADC1 peripheral, so the firmware's write to 0x400C4044 hit an unmapped address and faulted later. The peers are now called `vadc0` / `vadc1` (every board file under `sim/scenarios/` was renamed). The engine now has a warning request filed for a peer name that shadows a peripheral.
+
+![VCF boot, playback of a captured run](sim/screenshots/vcf-boot-playback.gif)
+
+*VCF boot (`vcf-enc` scenario), `sim` 0.10.3 (build 8a6a23df), 3 s of virtual time, 11 s wall. The GIF is a playback of a captured run (virtual time), not real time; it is built from `sim/captures/vcf-enc-uart.txt` by `sim/tools/make_boot_gif.py`.*
 
 **Screenshots from this run** (`sim` 0.10.0 build f219eb31, 2026-11-15; images in `sim/screenshots/`):
 
 | Image | What it shows |
 | --- | --- |
-| ![Dashboard](sim/screenshots/dash-car-2.9s.png) | Dashboard (STM32H750, 320x240 Sharp memory LCD) at 2.9 s of the 3 s `car` run: gear/mode "00", cell value 3.50, INV 0, MTR 0, accelerator bar empty, battery bar about a quarter filled. Matches the ACU's 3.50 V minimum cell; the inverter values are 0 because VCF/VCR did not boot (see gaps). |
+| ![Dashboard](sim/screenshots/dash-car-2.9s.png) | Dashboard (STM32H750, 320x240 Sharp memory LCD) at 2.9 s of the 3 s `car` run: gear/mode "00", cell value 3.50, INV 0, MTR 0, accelerator bar empty, battery bar about a quarter filled. Matches the ACU's 3.50 V minimum cell; the inverter values are 0 because VCF/VCR did not boot on 0.10.0 (they do now; the screenshot was not re-taken). |
 | ![CCU](sim/screenshots/ccu-charge-7s.png) | CCU (ILI9341) at 7 s of the `charge` run: "CCU SM: CHARGING 120", cell max 3.920 / min 3.500 / avg 3.710 V, pack 467.450 V, board temp max 41.0 C, current scalar 30 %, state of charge 4.34 %. |
 | ![CCU car](sim/screenshots/ccu-car-3s.png) | CCU at 3 s of the `car` run, for comparison (busy main bus). |
 
@@ -83,7 +90,7 @@ flowchart LR
   acu -- "mux 0x1" --- acu_chain1
   acu_adcmux(["adcmux<br/>SPI.SPIMultiplexer"])
   acu -- "lpspi4" --- acu_adcmux
-  acu_adc0(["adc0<br/>SPI.ScriptedSpiSlave"])
+  acu_adc0(["vadc0<br/>SPI.ScriptedSpiSlave"])
   acu -- "adcmux 0x0" --- acu_adc0
   acu_em(["em<br/>CAN.ScriptedCanNode"])
   ccu["ccu<br/>Teensy41"]
@@ -110,14 +117,18 @@ flowchart LR
 | Configuration | Where | Virtual | Wall | Result |
 | --- | --- | --- | --- | --- |
 | ACU + CCU + energy meter + charger | `charge` | 7 s | 100 s | runs; ACU 58.8 MIPS, CCU 38.8 MIPS; charger sees 530 V / 0.2 A at 6.849 s |
-| Whole car, 5 boards | `car` | 3 s | 58 s | ACU, CCU, Dashboard run; VCF and VCR end in BusFault; 2110 lines on the main bus log |
-| VCR alone (ready-to-drive plan) | `vcr-rtd` | 2 s | 11 s | VCR ends in BusFault at boot, no USB output |
+| Whole car, 5 boards | `car` | 3 s | 69 s (0.10.3) | all five boards run, no FAIL; 11167 frames on the main bus log (VCF 1.5 MB, VCR 0.79 MB, CCU 88 KB of UART capture). 0.10.0: 58 s, VCF and VCR in BusFault, 2110 bus lines |
+| VCF alone | `vcf-enc` / `vcf-i2c` | 3 s | 11 s / 11 s (0.10.3) | boots, banner, no FAIL (see above); `vcf-i2c` 1.37 MB UART |
+| VCR alone (ready-to-drive plan A) | `vcr-rtd` | 3 s | 28 s (0.10.3) | boots, inverter CAN frames decoded, no FAIL. 0.10.0 (2 s): BusFault at boot |
+| ACU / CCU / Dashboard alone | `acu` / `ccu` / `dash` | 3 s | 24 s / 26 s / 27 s (0.10.3) | run to the bound, no FAIL; ACU has no console (0 UART bytes), CCU 80 KB UART, Dashboard framebuffer at 2.912 s |
+| ACU + CCU charging | `charge` | 7 s | 109 s (0.10.3) | runs, no FAIL; charger sees `CHARGER_CONTROL` 530 V / 0.2 A at 6.849 s; 100 s wall on 0.10.0 |
 
 The original author's 11 s whole-car drive cycle (600 s wall) was not re-run here: `unverified`.
 
 **Gaps, with the evidence:**
-- Re-run on `sim` 0.10.2 (build 83eb7a66), 2026-11-17: `vcf-i2c` and `vcr-rtd` (3 s guest, 17 s wall each) end in the same BusFault at the same pcs (0x0001382e VCF, 0x0001680e VCR), no USB console output, no GIF for the boards. The faulting instruction is the `ldr` in the Teensy core's `tempmonGetTemp` that polls TEMPSENSE0 (FINISHED, bit 2) at 0x400D8180, which is the i.MX RT1062 temperature-monitor register in the reference manual, so the firmware access is valid and the block is absent from the model. Original 0.10.0 record: `FAIL: machine 'vcf' ended in BusFault at pc=0x0001382e (tempmonGetTemp)`, same for `vcr` at 0x0001680e, faulting pc in `analog_init` (Teensy core temperature-monitor read). Reproduced on the VCR alone. A model gap in the released `sim` (the i.MX RT1062 TEMPMON block is in the engine source but not in this release, `unverified` whether newer builds boot); not worked around.
-- ACU and CCU: `[bus] unhandled write: 0x400c4044`, once per run, no visible effect.
+- Scenario naming collision (fixed): see the note under the table above. A peer or entity name in a `.board` file that equals a peripheral of the chip replaces that peripheral. The earlier statement that the RT1062 model lacks TEMPMON was wrong; with the rename, VCF and VCR pass `tempmonGetTemp` on `sim` 0.10.3. Searched all 14 board files: no other peer name equals an i.MX RT1062 peripheral (`mux`, `phy`, `tft`, `enc`, `em`, `db`, `mon`, `sink`, `invs`, `charger`, `chain0/1`, `adcmux`, `aadcNN`, `expander`, `stim`, `btn`); the Dashboard's `rcc` / `gpioPortB` entries configure the existing peripherals on purpose.
+- Unhandled writes: the 0.10.0 runs logged `[bus] unhandled write: 0x400c4044` once for the ACU and CCU. In the 0.10.3 re-run (`-v`, 3 s each: VCF, VCR, ACU, CCU, Dashboard solo) no `[bus] unhandled` line appears; the only warning is `nvic: systickFrequency is ignored` for the Teensy boards (a scenario attribute the engine ignores). Not attributed to a cause: `unverified`.
+- VCF's own CAN traffic is only visible in the `car` run (the solo `sink` peer logs nothing); the 0.10.3 `car` bus log shows 0xC0, 0xED, 0xE4 and 0x41F at about 119 frames/s each.
 - Dashboard needs `rcc: hseFrequency: 25000000` in its board file, otherwise FDCAN drops every 1 Mbit frame.
 - The CCU stand-in display reports `missing_end_trailer` diagnostics from the display peer.
 

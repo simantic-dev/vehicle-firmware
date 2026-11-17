@@ -1,8 +1,8 @@
 mux: SPI.SPIMultiplexer @ lpspi4
     ActiveLowMask: 0x3
-adc0: SPI.ScriptedSpiSlave @ mux 0
+vadc0: SPI.ScriptedSpiSlave @ mux 0
     file: "@SIMANTIC@/peers/car/vcr_adc0.py"
-adc1: SPI.ScriptedSpiSlave @ mux 1
+vadc1: SPI.ScriptedSpiSlave @ mux 1
     file: "@SIMANTIC@/peers/car/vcr_adc1.py"
 gpio2:
     0 -> mux@0

@@ -16,7 +16,7 @@ gpio6:
     28 -> mux@1
 adcmux: SPI.SPIMultiplexer @ lpspi4
     ActiveLowMask: 0x1
-adc0: SPI.ScriptedSpiSlave @ adcmux 0
+vadc0: SPI.ScriptedSpiSlave @ adcmux 0
     file: "@SIMANTIC@/peers/solo/acu_max1148.py"
 aadc18: Analog.ADCChannelSource @ adc1 8
     defaultValueMicroVolts: 500000
