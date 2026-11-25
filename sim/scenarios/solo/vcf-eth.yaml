@@ -1,0 +1,11 @@
+# VCF alone on the car Ethernet: the unmodified VCF image sends hytech_msgs.VCFData over UDP to a VCR stand-in that decodes it
+machines:
+  vcf: {mcu: Teensy41, elf: ../../elf/vcf.elf, overlay: vcf-eth.board}
+media:
+  - {type: can, connect: [vcf.can1, vcf.sink]}
+  - {type: uart, connect: [vcf.lpuart4, vcf.enc]}
+  - type: eth
+    connect: [vcf.enet, vcf.vcr]
+    pcap: @OUT@/eth.pcap
+quantum: 0.0001
+timeout: 5

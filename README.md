@@ -45,6 +45,39 @@ several minutes of wall clock on a laptop (about 6 min under load here); the cha
 (they boot since the scenario naming fix, see below); the 240 V path is not exercised. Prerequisites: `sim` 0.10.0 (`curl -fsSL https://simantic.com/install | sh`)
 and PlatformIO for `./demo build`.
 
+## Demo: the VCF on the car Ethernet
+
+```sh
+./demo eth      # no build step: uses the committed VCF image (sim/fw/vcf.elf); about 1-2 minutes of wall clock
+```
+
+![VCF telemetry over Ethernet, decoded](media/hytech-eth.gif)
+
+```mermaid
+flowchart LR
+  vcf["VCF<br/>Teensy 4.1, vcf-prod image<br/>QNEthernet + DP83825I PHY"]
+  adc["2x MCP3208 ADC<br/>peers/solo/vcf_adc0_eth.py, vcf_adc1.py<br/>accelerator ramp from 2.2 s"]
+  enc["Orbis steering encoder<br/>peers/solo/enc.py"]
+  vcr["VCR stand-in, 192.168.3.31<br/>peers/car/vcr_eth.py<br/>ARP + nanopb decode"]
+  eth(("car Ethernet<br/>eth.pcap"))
+  vcf -- "lpspi4 mux: pedals, brake, load cells" --> adc
+  vcf -- "lpuart4" --- enc
+  vcf -- "UDP 4444: hytech_msgs.VCFData, 10 Hz" --- eth
+  eth --- vcr
+  vcr -- "decoded fields" --> host["terminal (./demo eth)"]
+```
+
+The VCF image is HyTech Racing's production front-controller firmware, unmodified. It boots on a simulated Teensy 4.1,
+brings up QNEthernet at 192.168.3.32, ARPs for the VCR at 192.168.3.31 and sends its `hytech_msgs.VCFData` protobuf
+every 100 ms. A Python stand-in for the VCR answers the ARP and decodes each datagram with `sim/tools/pbdec.py` against
+the nanopb headers of the HT_proto release the firmware pins (fetched once into `sim/build/proto`). The scripted
+driver presses the accelerator from 2.2 s; the VCF reports `accel pressed 1` and flags it `implausible 1`, because the
+pedal calibration lives in EEPROM, which is blank in the simulator, so the firmware's own plausibility check rejects the
+press. The two steering sensors also disagree: the stand-in encoder and the analog channel are not set to one angle. Every
+frame is in `sim/build/out/eth/eth.pcap` for Wireshark. Known gaps: transaction-level peers with invented stimulus,
+no electrical model; the run is about 20x slower than real time on a laptop (the VCF's busy main loop polls the
+encoder UART; being traced in the simulator).
+
 ## This fork: the car in a simulator
 
 Simantic's fork of HyTech Racing's firmware monorepo, with a `sim/` directory that runs the real firmware in the Simantic simulator.

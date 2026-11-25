@@ -1,7 +1,7 @@
 #!/bin/bash
 # Runs one scenario with pyrite's `sim` binary and leaves the evidence in build/out/TAG.
 # usage: run.sh SCENARIO [TAG] [TIMEOUT_S] [extra sim args]
-#   SCENARIO: car | charge | vcf-enc | vcf-i2c | vcr-rtd | acu | ccu | dash
+#   SCENARIO: car | charge | vcf-enc | vcf-eth | vcf-i2c | vcr-rtd | acu | ccu | dash
 #   env: SIM (path to the sim binary, default: sim),
 #        RTD_PLAN (vcr-rtd only: A, B, C or D, default A)
 set -e
@@ -18,7 +18,7 @@ find "$WORK/scenarios" "$WORK/peers" "$WORK/standins" -type f \( -name '*.yaml' 
   -exec sed -i.bak -e "s#@SIMANTIC@#$WORK#g" -e "s#@OUT@#$OUT#g" {} \; -exec rm -f {}.bak \;
 case $SC in
   car|charge|dash-replay) Y=$WORK/scenarios/car/$SC.yaml; ;;
-  vcf-enc|vcf-i2c|vcr-rtd|acu|ccu|dash) Y=$WORK/scenarios/solo/$SC.yaml; ;;
+  vcf-enc|vcf-eth|vcf-i2c|vcr-rtd|acu|ccu|dash) Y=$WORK/scenarios/solo/$SC.yaml; ;;
   *) echo "unknown scenario $SC" >&2; exit 1 ;;
 esac
 export CARLOG=$OUT/can-main.log FULLCAR_OUT=$OUT RTD_OUT=$OUT RTD_PLAN=${RTD_PLAN:-A}

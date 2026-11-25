@@ -8,6 +8,31 @@ cd "$(dirname "$0")"
 if [ "${1:-}" = build ]; then exec sh sim/build.sh acu ccu; fi
 SIM="${SIM:-sim}"
 command -v "$SIM" >/dev/null || { echo "sim not found. Install it: curl -fsSL https://simantic.com/install | sh" >&2; exit 1; }
+# ./demo eth [seconds]: the prebuilt VCF image alone on the car Ethernet; a VCR stand-in decodes its hytech_msgs.VCFData UDP
+if [ "${1:-}" = eth ]; then
+  P=sim/build/proto
+  if ! ls "$P"/*.pb.h >/dev/null 2>&1; then  # the HT_proto release VCF/platformio.ini pins
+    mkdir -p "$P"
+    curl -fsSL https://github.com/hytech-racing/HT_proto/releases/download/2026-06-14T06_30_48/hytech_msgs_pb_lib.tar.gz \
+      | tar xz -C "$P" --strip-components 1 '*.pb.h'
+  fi
+  mkdir -p sim/build/elf && cp sim/fw/vcf.elf sim/build/elf/vcf.elf
+  OUT=sim/build/out/eth; mkdir -p "$OUT"; : > "$OUT/stdout.txt"
+  sh sim/run.sh vcf-eth eth "${2:-5}" --ascii > /dev/null 2>&1 &
+  run=$!
+  tail -n +1 -F "$OUT/stdout.txt" 2>/dev/null | grep --line-buffered '^vcr-eth' &
+  wait "$run"; sleep 1; pkill -f "tail -n [+]1 -F $OUT/stdout.txt" 2>/dev/null || true
+  frames=$(python3 -I - "$OUT/eth.pcap" <<'EOF'
+import sys
+d, i, n = open(sys.argv[1], "rb").read(), 24, 0  # pcap: 24 B file header, then 16 B record header + frame
+while i + 16 <= len(d):
+    i += 16 + int.from_bytes(d[i + 8:i + 12], "little"); n += 1
+print(n)
+EOF
+)
+  echo "done: $frames Ethernet frames on the wire (pcap: $OUT/eth.pcap)"
+  exit 0
+fi
 [ -f sim/build/elf/acu.elf ] && [ -f sim/build/elf/ccu.elf ] || { echo "not built yet: ./demo build" >&2; exit 1; }
 OUT=sim/build/out/demo
 mkdir -p "$OUT"
